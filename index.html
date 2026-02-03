@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 66.1</title>
+
+<style>
+
+/* ===== FLOAT BUTTON ===== */
+.fab{
+  position:fixed;
+  right:16px;
+  bottom:90px;
+  z-index:9999;
+}
+.fab-btn{
+  width:48px;
+  height:48px;
+  background:#ff9800;
+  color:#000;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,.4);
+}
+.fab-menu{
+  position:absolute;
+  bottom:60px;
+  right:0;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  opacity:0;
+  pointer-events:none;
+  transition:.3s;
+}
+.fab-menu.show{
+  opacity:1;
+  pointer-events:auto;
+}
+.fab-item{
+  width:44px;
+  height:44px;
+  background:#2196f3;
+  color:#fff;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.rainbow-text{
+    font-weight:bold;
+    font-size:15px;
+    text-align:center;
+
+    background: linear-gradient(
+        90deg,
+        red,
+        orange,
+        yellow,
+        green,
+        cyan,
+        blue,
+        violet,
+        red
+    );
+
+    background-size: 400% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    animation: rainbowMove 4s linear infinite;
+}
+
+@keyframes rainbowMove{
+    0%{
+        background-position: 0% 50%;
+    }
+    100%{
+        background-position: 100% 50%;
+    }
+}
+
+.view-box{
+    text-align:center;
+    margin:6px 0;
+}
+
+/* Ẩn tooltip + chặn giữ lâu */
+.view-img{
+    height:16px;
+    width:auto;
+    vertical-align:middle;
+
+    pointer-events:none;   /* 🔥 chặn tooltip */
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none; /* Android / iOS */
+}
+
+.to-top{
+    position:fixed;
+    right:16px;
+    bottom:90px;
+    width:44px;
+    height:44px;
+    background:#2196f3;
+    color:#fff;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    cursor:pointer;
+    display:none;
+    z-index:150;
+}
+.to-top.show{
+    display:flex;
+}
+
+body{
+    margin:0;
+    background:#111;
+    color:#fff;
+    font-family:Arial, sans-serif;
+}
+a{text-decoration:none;color:inherit}
+
+/* ===== KHỐI TRÊN ===== */
+.top-box{
+    max-width:900px;
+    margin:20px auto;
+    padding:15px;
+    background:#1c1c1c;
+    border-radius:6px;
+}
+.breadcrumb{
+    font-size:13px;
+    color:#aaa;
+}
+.title{
+    text-align:center;
+    font-size:22px;
+    margin:10px 0;
+    cursor:pointer;
+}
+.chapter{text-align:center;font-size:18px;}
+.update{text-align:center;font-size:13px;color:#aaa;margin:8px 0;}
+.tip{
+    background:#cfe9ee;
+    color:#000;
+    padding:10px;
+    border-radius:6px;
+    text-align:center;
+    font-size:14px;
+    margin:10px 0;
+}
+
+/* nút trên */
+.top-nav{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
+.top-nav a{
+    padding:8px 14px;
+    border-radius:6px;
+    font-size:14px;
+    cursor:pointer;
+}
+.prev{background:#2196f3;}
+.next{background:#888;}
+
+/* ===== ẢNH ===== */
+img{
+    width:100%;
+    max-width:900px;
+    display:block;
+    margin:0 auto;
+    vertical-align:bottom;
+}
+
+/* ===== BOTTOM BAR ===== */
+.bottom-bar{
+    position:fixed;
+    bottom:-80px;
+    left:0;
+    width:100%;
+    background:#000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:14px;
+    padding:10px 0;
+    transition:.3s;
+}
+.bottom-bar.show{bottom:0;}
+.bottom-bar a{font-size:22px;}
+.chapter-box{
+    background:#2a2a2a;
+    padding:6px 16px;
+    border-radius:6px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+/* ===== POPUP ===== */
+.popup{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.85);
+    display:none;
+}
+.popup-list{
+    max-width:420px;
+    margin:60px auto;
+    background:#3a3a3a;
+    border-radius:8px;
+}
+.item{
+    padding:14px;
+    border-bottom:1px solid #555;
+    cursor:pointer;
+}
+.item:hover{background:#4a4a4a;}
+.active{color:#4fc3f7;}
+.close{text-align:center;padding:12px;background:#222;}
+</style>
+</head>
+
+<body>
+
+<!-- ===== FLOAT SETTING BUTTON ===== -->
+<div class="fab">
+  <div class="fab-btn" id="fabMain">⚙</div>
+
+  <div class="fab-menu">
+    <div class="fab-item" id="musicBtn">🎵</div>
+    <div class="fab-item" onclick="lenDau()">⬆</div>
+  </div>
+</div>
+
+<audio id="bgMusic" loop>
+  <source src="nhacnen.mp3" type="audio/mpeg">
+</audio>
+
+<div class="top-box">
+
+    <!-- TRANG CHỦ -->
+    <div class="breadcrumb">
+        <a href="https://dichtruyendrop.github.io/Wed/">Trang Chủ</a> /
+        Change (Jinyuan) Ss2 / Chương 66.1
+    </div>
+
+    <!-- TÊN TRUYỆN -->
+    <div class="title" onclick="goStory()">
+        Change (Jinyuan) Ss2
+    </div>
+
+    <div class="chapter">- Chapter 66.1 -</div>
+    
+    <div class="view-box">
+   <div class="rainbow-text">Lượt Xem</div>
+    <img class="view-img"
+         src="https://visitor-badge.laobi.icu/badge?page_id=chapter66.1&left_text=&left_color=0000000"
+         alt="">
+</div>
+    
+    <div class="update">Cập nhật: 22:22 (3/2/2026)</div>
+
+    <div class="tip">
+        Dùng ← → để chuyển chapter
+    </div>
+
+    <div class="top-nav">
+        <a class="prev" onclick="chapTruoc()">← Chap Trước</a>
+        <a class="next" onclick="het()">Chap Sau →</a>
+    </div>
+</div>
+
+<!-- ===== ẢNH ===== -->
+
+<img src="https://raw.githubusercontent.com/DichTruyenDrop/T-olao/refs/heads/main/0.9.jpg">
+<img src="https://dichtruyendrop.github.io/change-jinyuan-ss2-chap-65.3.html/0.jpg">
+<img src="1.jpg">
+<img src="2.jpg">
+<img src="3.jpg">
+<img src="4.jpg">
+<img src="5.jpg">
+<img src="6.jpg">
+<img src="7.jpg">
+<img src="8.jpg">
+<img src="9.jpg">
+<img src="10.jpg">
+<img src="11.jpg">
+<img src="12.jpg">
+<img src="13.jpg">
+<img src="14.jpg">
+<img src="15.jpg">
+<img src="16.jpg">
+<img src="17.jpg">
+<img src="18.jpg">
+<img src="19.jpg">
+<img src="20.jpg">
+<img src="21.jpg">
+<img src="22.jpg">
+<img src="23.jpg">
+<img src="24.jpg">
+<img src="https://dichtruyendrop.github.io/change-jinyuan-ss2-chap-62-3.html/38.jpg">
+<img src="https://dichtruyendrop.github.io/change-jinyuan-ss2-chap-62-3.html/39.jpg">
+<img src="https://dichtruyendrop.github.io/change-jinyuan-ss2-chap-63-2.html/50.jpg">
+
+
+
+
+
+
+<!-- ===== BOTTOM BAR ===== -->
+<div class="bottom-bar" id="bar">
+    <a href="https://dichtruyendrop.github.io/Wed/">🏠</a>
+    <a onclick="chapTruoc()">⬅</a>
+
+    <div class="chapter-box" onclick="openChap()">Chapter 66.1</div>
+
+    <a onclick="het()">➡</a>
+</div>
+
+
+
+<script>
+const CHAP_HIEN_TAI = 66.1;
+
+/* lưu chap khi mở trang */
+localStorage.setItem("lastChap", CHAP_HIEN_TAI);
+
+/* bottom bar */
+window.addEventListener("scroll",()=>{
+    const bar=document.getElementById("bar");
+    const y=scrollY;
+    const max=document.body.scrollHeight-innerHeight;
+    if(y<80||y>max-120) bar.classList.add("show");
+    else bar.classList.remove("show");
+});
+
+/* điều hướng */
+function chapTruoc(){
+    localStorage.setItem("lastChap", CHAP_HIEN_TAI-1);
+    location.href="https://dichtruyendrop.github.io/change-jinyuan-ss2-chap-65.2.html/";
+}
+function goChap(n){
+    localStorage.setItem("lastChap", n);
+    location.href="chap"+n+".html";
+}
+function goStory(){
+    location.href="https://dichtruyendrop.github.io/Change--Jinyuan--Ss2/";
+}
+function openChap(){popup.style.display="block";}
+function closeChap(){popup.style.display="none";}
+function het(){alert("HẾT RỒI BẠN ƠI !!!");}
+
+/* hiện bottom bar + nút lên đầu */
+window.addEventListener("scroll",()=>{
+    const bar=document.getElementById("bar");
+    const y=window.scrollY;
+    const max=document.body.scrollHeight-window.innerHeight;
+
+    if(y<80 || y>max-120) bar.classList.add("show");
+    else bar.classList.remove("show");
+
+    // nút lên đầu
+    const topBtn=document.querySelector(".to-top");
+    if(y>400) topBtn.classList.add("show");
+    else topBtn.classList.remove("show");
+});
+
+function lenDau(){
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+}
+
+const fabMain = document.getElementById("fabMain");
+const fabMenu = document.querySelector(".fab-menu");
+const music = document.getElementById("bgMusic");
+const musicBtn = document.getElementById("musicBtn");
+
+let open = false;
+let playing = false;
+
+fabMain.onclick = () => {
+  open = !open;
+  fabMenu.classList.toggle("show");
+  fabMain.textContent = open ? "❌" : "⚙";
+};
+
+musicBtn.onclick = () => {
+  if(playing){
+    music.pause();
+    musicBtn.textContent = "🎵";
+  }else{
+    music.volume = 0.3;
+    music.play();
+    musicBtn.textContent = "⏸";
+  }
+  playing = !playing;
+};
+
+</script>
+
+</body>
+</html>
+
